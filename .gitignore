@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+backups/
+tests/results/
+*.wav
+*.als
+*.alc
+.DS_Store
+.pytest_cache/

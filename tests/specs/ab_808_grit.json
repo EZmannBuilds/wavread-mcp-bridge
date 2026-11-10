@@ -1,0 +1,4 @@
+{"name": "808 grit", "source": "Tool SC Bass", "bars": 4, "position": "1.1.1",
+ "play": [{"track": "Tool SC Bass", "slot": 0}],
+ "A": [{"cmd": "set_rack_macros", "params": {"track": "Tool SC Bass", "device": "Tool 808 Rack", "values": {"Grit": 40.0}, "units": "raw"}}],
+ "B": [{"cmd": "set_rack_macros", "params": {"track": "Tool SC Bass", "device": "Tool 808 Rack", "values": {"Grit": 115.0}, "units": "raw"}}]}

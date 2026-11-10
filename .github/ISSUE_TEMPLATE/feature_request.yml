@@ -1,0 +1,14 @@
+name: Feature request
+description: A Live operation you'd like the tools to cover
+labels: [enhancement]
+body:
+  - type: textarea
+    id: what
+    attributes: {label: What you want to do in Live}
+    validations: {required: true}
+  - type: textarea
+    id: why
+    attributes: {label: Why, description: "The workflow it unlocks"}
+  - type: textarea
+    id: lom
+    attributes: {label: Live Object Model notes, description: "If you know the LOM call that does it, link it"}

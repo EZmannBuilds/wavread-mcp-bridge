@@ -1,20 +1,12 @@
-"""Release end-to-end test in a DISPOSABLE Live Set (a track named __TOOLING_SCRATCH__). Uses only Live's native
-devices and, where available, Apple's built-in Audio Units: no paid third-party plugins needed.
-
-Phases (run them in order; Live must have the disposable Set open):
-  refuse   : with authorization revoked, every protected action is refused and the Set is unchanged; a mismatched
-             authorization is refused; read-only inspection still works. Approval code flow (0.4.0): a request alone
-             grants nothing; a wrong code is refused and ends the request; an expired code is refused (waits 2 min).
-  (then a person approves: python3 tests/approve.py request / confirm CODE, the code read from Live's status bar)
-  write    : authorize; then track, return, native effect + parameters, third-party plugin (Apple AU, if listed),
-             sends in dB, audio bus routing, MIDI clip, Arrangement edit (create + split), automation (write +
-             validate), error handling (bad refs, bad paths, unknown commands). Leaves a manifest for `reopened`.
-  switched : (after opening a DIFFERENT Set) the old authorization doesn't carry over: writes refused, status says so.
-  reopened : (after reopening the disposable Set) not authorized; everything built in `write` is still there; writes
-             refused. Then a person approves again, and:
-  reapproved: writes work once re-authorized.
-  untitled : (with a new, unsaved Set open) authorizing and writing are both refused: "save the Set first".
-usage: python3 tests/test_e2e_release.py refuse|write|switched|reopened|reapproved|untitled
+"""End-to-end release test for WavReadBridge 0.5.0 (no approval codes), against Live. Phases, run in this order:
+  connection: (any saved Set) info answers with name, version and port; reconnects after a dropped half-request; the
+             old approval commands are gone ("unknown command"); write_status reports writes_allowed.
+  write    : (the disposable Set) track, return, native effect + parameters, third-party plugin (Apple AU, if
+             listed), send in dB, audio bus routing, MIDI clip, Arrangement create + split, automation; clear errors.
+  notscratch: (a saved Set that is NOT disposable) deletes are refused and the Set is unchanged; other writes run.
+  reopened : (after reopening the disposable Set) everything built in `write` is still there, and writes still run.
+  untitled : (with a new, unsaved Set open) every write is refused: "save the Set first".
+usage: python3 tests/test_e2e_release.py connection|write|notscratch|reopened|untitled
 Results: tests/results/e2e-<phase>.json
 """
 import json, os, sys, time
@@ -40,100 +32,36 @@ def names():
     return {t["name"]: t["ref"] for t in call("list_tracks", devices=False)}
 
 
-PROTECTED = [
+WRITES = [
     ("create_track", dict(kind="audio", name="E2E Should Not Exist")),
-    ("create_return_track", dict(name="E2E Should Not Exist")),
-    ("rename_track", dict(track=0, name="E2E Should Not Exist")),
     ("set_mixer", dict(track=0, volume_db=-3.0)),
-    ("set_track_send", dict(track=0, send="A", db=-12)),
-    ("set_routing", dict(track=0, direction="output", target="Main")),
     ("insert_native_device", dict(track=0, name="EQ Eight")),
-    ("set_device_parameter", dict(track=0, device=0, parameter=1, value=0.5, units="raw")),
-    ("make_test_clip", dict(track=0, slot=7, length=4.0)),
-    ("set_automation_points", dict(track=0, slot=0, target={"mixer": "volume"}, points=[{"at": "1.1.1", "value": 0.5}])),
-    ("create_arrangement_midi_clip", dict(track=0, at="40.1.1", length=4)),
-    ("move_arrangement_clip", dict(track=0, to="50.1.1", index=0)),
-    ("trim_arrangement_clip", dict(track=0, index=0, end="1.2.1")),
-    ("split_arrangement_clip", dict(track=0, split_at="1.2.1", index=0)),
-    ("record_track_audio", dict(dst=0, source="Resampling", slot=7, bars=1)),
-    ("record_arrangement_automation", dict(track=0, target={"mixer": "volume"}, points=[{"at": "1.1.1", "value": 0.5}, {"at": "2.1.1", "value": 0.6}])),
     ("set_song_time", dict(tempo=99)),
-    ("set_arm", dict(track=0, arm=True)),
-    ("delete_track", dict(track=0)),
     ("some_future_command", dict()),
 ]
+DELETES = [("delete_track", dict(track=0)), ("delete_device", dict(track=0, device=0)),
+           ("delete_arrangement_clip", dict(track=0, index=0))]
 
 
-def check_refusals(tag):
-    before = call("list_tracks", devices=False)
-    tempo = call("probe", path="song")["attributes"]["tempo"]
-    results = {}
-    for cmd, kw in PROTECTED:
-        ok, msg = refused(cmd, **kw)
-        results[cmd] = ok
-        if not ok:
-            log("%s: %s refused" % (tag, cmd), False, message=msg)
-    log("%s: all %d protected actions refused" % (tag, len(PROTECTED)), all(results.values()),
-        refused=[k for k, v in results.items() if v])
-    after = call("list_tracks", devices=False)
-    log("%s: the Set is unchanged (tracks, mixer, tempo)" % tag,
-        before == after and call("probe", path="song")["attributes"]["tempo"] == tempo)
-    st = call("write_status")
-    log("%s: read-only inspection still works; status not authorized" % tag,
-        isinstance(call("list_tracks", devices=False), list) and not st["authorized"], status=st)
-    return st
-
-
-if phase == "refuse":
+if phase == "connection":
     i = call("info")
-    log("connection: info answers, name, version and loopback port", i["port"] == 9878 and i["version"] >= "0.4.0"
+    log("connection: info answers, name, version and loopback port", i["port"] == 9878 and i["version"] >= "0.5.0"
         and i["name"] == "WavReadBridge", info={
         k: i[k] for k in ("name", "version", "live_version", "port", "scratch_set")})
-    # reconnection: each call opens a new connection; several in a row, then a deliberately broken one
     import socket
     s = socket.create_connection(("127.0.0.1", 9878), timeout=5)
     s.sendall(b'{"type": "info", "params": ')        # incomplete JSON, then drop the connection
     s.close()
     ok = all(call("info")["port"] == 9878 for _ in range(5))
     log("reconnection: 5 fresh connections after a dropped half-request", ok)
-    call("revoke_authorization")
-    check_refusals("unauthorized")
-    # a raw TCP client, no MCP server in between: the bridge itself refuses
-    s2 = socket.create_connection(("127.0.0.1", 9878), timeout=10)
-    s2.sendall(json.dumps({"type": "create_track", "params": {"kind": "audio", "name": "E2E Raw TCP"}}).encode())
-    raw = json.loads(s2.recv(65536).decode())
-    s2.close()
-    log("a direct TCP write (bypassing MCP) is refused", raw.get("status") == "error" and "refused" in raw.get("message", "")
-        and "E2E Raw TCP" not in names(), reply=raw)
-    ident = call("get_set_identity")
-    log("identity: file path and a set_id stored in the Set", bool(ident["file_path"]) and len(ident["set_id"]) == 32,
-        identity=ident)
-    bad = [("wrong set_id", dict(file_path=ident["file_path"], set_id="0" * 32)),
-           ("wrong path", dict(file_path="/tmp/other.als", set_id=ident["set_id"]))]
-    for label, kw in bad:
-        ok, msg = refused("authorize_set", **kw)
-        log("authorize with a %s is refused" % label, ok, message=msg)
-    log("still not authorized after the bad attempts", not call("write_status")["authorized"])
-    # approval code flow, live
-    r = call("authorize_set", file_path=ident["file_path"], set_id=ident["set_id"])
-    import re as _re
-    log("authorize_set grants nothing by itself; the reply carries no code", not r["authorized"] and r["approval_pending"]
-        and not _re.search(r"\b[A-HJ-NP-Z2-9]{6}\b", json.dumps({k: v for k, v in r.items() if k != "message"})),
-        reply=r)
-    ok, msg = refused("set_mixer", track=0, volume_db=-3)
-    log("a write is still refused while approval is pending", ok, message=msg)
-    ok, msg = refused("confirm_authorization", code="AAAAAA")
-    log("a wrong code is refused", ok, message=msg)
+    gone = {}
+    for cmd in ("authorize_set", "confirm_authorization", "set_approval_mode", "revoke_authorization"):
+        ok, msg = refused(cmd, file_path="x", set_id="y", code="AAAAAA", mode="off")
+        gone[cmd] = ok and "unknown command" in msg
+    log("the approval-code commands are gone", all(gone.values()), gone=gone)
     st = call("write_status")
-    log("the wrong code ended the request (nothing pending, not authorized)", not st["approval_pending"]
-        and not st["authorized"])
-    ok, msg = refused("confirm_authorization", code="AAAAAA")
-    log("confirming again without a request is refused", ok and "no approval is pending" in msg, message=msg)
-    call("authorize_set", file_path=ident["file_path"], set_id=ident["set_id"])
-    time.sleep(122)
-    ok, msg = refused("confirm_authorization", code="AAAAAA")
-    log("an expired code is refused", ok and "expired" in msg, message=msg)
-    log("not authorized at the end of the refuse phase", not call("write_status")["authorized"])
+    log("write_status: writes allowed on a saved Set, no approval fields", st["writes_allowed"]
+        and "approval" not in st and "authorized" not in st, status=st)
 
 elif phase == "write":
     i = call("info")
@@ -141,8 +69,8 @@ elif phase == "write":
         sys.exit("open the disposable Set")
     ident = call("get_set_identity")
     st = call("write_status")
-    log("a person approved this disposable Set (code from Live's status bar)", st["authorized"]
-        and st["authorized_identity"]["file_path"] == ident["file_path"], identity=st["authorized_identity"])
+    log("writes allowed on this saved disposable Set, no code asked", st["writes_allowed"] and st["scratch_set"],
+        status=st)
     m = {}
     stamp = time.strftime("%H%M%S")
     t = call("create_track", kind="audio", name="E2E Audio %s" % stamp)
@@ -221,22 +149,25 @@ elif phase == "write":
             errs[label] = str(e)[:100]
     log("error handling: every bad request gives a clear error", all(v != "NO ERROR" for v in errs.values()), errors=errs)
     log("bridge still answers after the errors", call("info")["port"] == 9878)
-    log("an authorized delete outside a disposable Set is still refused (second guard)", True,
-        note="covered offline (test_deletes_also_need_scratch); this Set is disposable")
+    log("a delete outside a disposable Set is refused", True,
+        note="tested live in the notscratch phase and offline (test_deletes_need_scratch)")
     m["identity"] = ident
     m["arr_clips"] = [(x["start"], x["end"]) for x in cl]
     json.dump(m, open(MANIFEST, "w"), indent=1)
 
-elif phase == "switched":
-    st = call("write_status")
-    log("after opening another Set: not authorized", not st["authorized"], status=st)
-    ok, msg = refused("create_track", kind="audio", name="E2E Should Not Exist")
-    log("after opening another Set: a write is refused", ok, message=msg)
+elif phase == "notscratch":
+    i = call("info")
+    if i["scratch_set"]:
+        sys.exit("open a saved Set that is NOT disposable")
+    before = call("list_tracks", devices=True)
+    res = {cmd: refused(cmd, **kw) for cmd, kw in DELETES}
+    log("not disposable: every delete is refused", all(ok for ok, _ in res.values()),
+        refused={k: v[1] for k, v in res.items()})
+    log("not disposable: the Set is unchanged", call("list_tracks", devices=True) == before)
+    log("not disposable: read-only inspection works", isinstance(call("list_tracks", devices=False), list))
 
 elif phase == "reopened":
     m = json.load(open(MANIFEST))
-    st = call("write_status")
-    log("reopened: not authorized until authorized again", not st["authorized"], status=st)
     ident = call("get_set_identity")
     log("reopened: same set_id (stored in the Set) and path", ident["set_id"] == m["identity"]["set_id"]
         and ident["file_path"] == m["identity"]["file_path"], identity=ident)
@@ -252,20 +183,15 @@ elif phase == "reopened":
     log("reopened: automation survives", v["ok"])
     p = call("get_device_parameters", track=n[m["audio"]], device="Echo")["parameters"]
     log("reopened: the effect parameter survives", [x["display"] for x in p if x["name"] == "Feedback"][0] == m["echo_feedback"])
-    ok, msg = refused("set_mixer", track=mt, volume_db=-3)
-    log("reopened: writes refused before a person approves", ok, message=msg)
-
-elif phase == "reapproved":
-    m = json.load(open(MANIFEST))
-    mt = names()[m["midi"]]
-    log("reapproved: authorized again after the person's code", call("write_status")["authorized"])
     call("set_mixer", track=mt, volume_db=-3)
-    log("reapproved: writes work", abs(call("get_mixer", track=mt)["volume_db"] + 3) < 0.05)
+    log("reopened: writes run, no code asked", abs(call("get_mixer", track=mt)["volume_db"] + 3) < 0.05)
 
 elif phase == "untitled":
     ident = call("get_set_identity")
     log("untitled: the open Set has no file path", ident["file_path"] == "", identity=ident)
-    ok, msg = refused("authorize_set", file_path="", set_id=ident["set_id"])
-    log("untitled: authorizing is refused (save first)", ok and "untitled" in msg, message=msg)
-    ok, msg = refused("create_track", kind="audio", name="E2E Should Not Exist")
-    log("untitled: a write is refused (save first)", ok and "untitled" in msg, message=msg)
+    before = call("list_tracks", devices=False)
+    res = {cmd: refused(cmd, **kw) for cmd, kw in WRITES}
+    log("untitled: every write is refused (save first)", all(ok and ("untitled" in m or "unknown command" in m)
+                                                            for ok, m in res.values()),
+        refused={k: v[1] for k, v in res.items()})
+    log("untitled: the Set is unchanged", call("list_tracks", devices=False) == before)

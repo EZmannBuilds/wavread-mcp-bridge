@@ -100,6 +100,13 @@ automation), OFF (offline file processing).
 |---|---|---|---|
 | preserve state, alternate, render both, loudness-match, measure, restore or keep | Working | LOM + REC + OFF | `tools/ab_compare.py SPEC.json [--keep A|B]` (`tests/specs/ab_808_grit.json`): Grit 40 vs 115 rendered 8 s each, B +3.5 LUFS, +9.5 dB mid share, −3.3 dB sub share; matched copies written; original restored. Scratch sets only. Reports numbers, never a verdict |
 
+## Write protection 0.5.0 (current): no approval codes
+
+the owner, 2026-11-10: "Will other people have to run the code? If so just remove it". The code flow (0.4.0) and the
+"approval off" setting are gone. Edits run on any saved Set; untitled Sets are refused; deletes need a disposable Set;
+transport that would record counts as an edit; stop always runs; loopback only. Offline: `tests/offline/test_policy.py`
+16 tests. Live: see the 0.5.0 results below once run. The 0.3.0 and 0.4.0 sections that follow are history.
+
 ## Write protection (0.3.0)
 
 | Operation | Status | Evidence |

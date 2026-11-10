@@ -14,7 +14,7 @@ import argparse, json, os, socket, sys, time
 sys.path.insert(0, os.path.dirname(__file__))
 from lt import call, load, LiveError
 from lt import authorize
-authorize()   # tests run only in disposable Sets; writes need the Set authorized (0.3.0)
+authorize()   # tests run only in saved disposable Sets
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--vendor")

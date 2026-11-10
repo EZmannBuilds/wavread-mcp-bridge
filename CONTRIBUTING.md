@@ -1,7 +1,8 @@
 # Contributing
 
 Thanks for helping. Two rules matter more than any other here: **a tool never claims success it hasn't read back**, and
-**nothing changes a Live Set unless that Set has been authorized for writing** (see the README's Safety section).
+**every command is classified as read or write, and unknown commands count as writes** (see the README's Safety
+section).
 
 ## Set up
 

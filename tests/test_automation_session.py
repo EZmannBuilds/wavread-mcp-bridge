@@ -15,7 +15,7 @@ import argparse, os, sys, time
 sys.path.insert(0, os.path.dirname(__file__))
 from lt import call, peaks, Log
 from lt import authorize
-authorize()   # tests run only in disposable Sets; writes need the Set authorized (0.3.0)
+authorize()   # tests run only in saved disposable Sets
 
 RES = os.path.join(os.path.dirname(__file__), "results")
 ap = argparse.ArgumentParser()

@@ -1109,3 +1109,30 @@ def cmd_create_arrangement_midi_clip(cs, track, at, length, notes=None, name=Non
         c.add_new_notes(tuple(Live.Clip.MidiNoteSpecification(pitch=int(p), start_time=float(s), duration=float(d),
                                                               velocity=float(v), mute=False) for p, s, d, v in notes))
     return {"track": cs._ref(t), "start": c.start_time, "end": c.end_time, "name": c.name}
+
+
+# ---------------------------------------------------------------------------------------------- view (no edits)
+def cmd_show_clip(cs, track, slot=0):
+    """Select a session clip and show it in Live's Clip View (changes only what's on screen)."""
+    t = cs._track(track)
+    cslot = list(t.clip_slots)[int(slot)]
+    cs._song.view.selected_track = t
+    cs._song.view.highlighted_clip_slot = cslot
+    cs.application().view.show_view("Detail/Clip")
+    return {"track": cs._ref(t), "slot": int(slot), "view": "Detail/Clip"}
+
+
+def cmd_show_view(cs, name):
+    """Show one of Live's main views: "Arranger" or "Session" (changes only what's on screen)."""
+    if name not in ("Arranger", "Session"):
+        raise ToolError("name: Arranger or Session")
+    cs.application().view.show_view(name)
+    return {"view": name}
+
+
+def cmd_show_devices(cs, track):
+    """Select a track and show its devices in Live's Device View (changes only what's on screen)."""
+    t = cs._track(track)
+    cs._song.view.selected_track = t
+    cs.application().view.show_view("Detail/DeviceChain")
+    return {"track": cs._ref(t), "view": "Detail/DeviceChain"}

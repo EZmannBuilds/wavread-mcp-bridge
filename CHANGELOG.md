@@ -1,6 +1,14 @@
 # Changelog
 
-## v0.4.0-alpha.1 (unreleased)
+## v0.5.0-alpha.1 (2026-11-10)
+
+- **Approval codes removed.** Tools now edit whichever saved Set is open, with no approval step. `authorize_set`,
+  `confirm_authorization`, `set_approval_mode` and `revoke_authorization` are gone (79 tools). Unsaved Sets are still
+  refused, deletions still need a disposable Set, recording through transport still counts as a write, and stop
+  always runs. Work on copies of Sets that matter.
+- In Live (12.4.16, macOS): connection 4/4 and the delete guard 3/3 pass. The full edit suite last passed under 0.4.0.
+
+## v0.4.0-alpha.1 (2026-11-10)
 
 First public release, as WavRead MCP Bridge. An experimental developer preview.
 

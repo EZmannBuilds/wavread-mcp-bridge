@@ -31,7 +31,7 @@ from . import policy
 
 PORT = 9878
 HOST = "127.0.0.1"
-VERSION = "0.4.0"
+VERSION = "0.5.0"
 SCRATCH_MARKER = "__TOOLING_SCRATCH__"   # destructive commands run only in a set that has a track with this name
 LETTERS = "ABCDEFGHIJKL"
 MAIN_THREAD_TIMEOUT = 20.0
@@ -49,9 +49,7 @@ class WavReadBridge(ControlSurface):
     def __init__(self, c_instance):
         ControlSurface.__init__(self, c_instance)
         self._song = self.song()
-        self._auth = policy.Authorization()     # none: a newly opened Set is never authorized for writing
         self._session = policy.new_set_id()     # this control-surface instance (Live re-creates it on Set load)
-        self._settings = policy.Settings()      # the user's approval mode (code / off), read on every write
         self.running = True
         self.server = None
         self._start_server()
@@ -143,10 +141,9 @@ class WavReadBridge(ControlSurface):
         def task():
             try:
                 # the permission gate runs on Live's main thread, against the Set open at this moment
-                policy.gate(self._auth, name, params, self._identity(create=False), scratch=self._is_scratch(),
+                policy.gate(name, params, self._identity(create=False), scratch=self._is_scratch(),
                             fire_would_record=(name == "fire_clip" and self._fire_would_record(params)),
-                            transport_records=(policy.classify(name) == policy.TRANSPORT and self._recording_armed()),
-                            now=time.time(), approval=self._settings.load())
+                            transport_records=(policy.classify(name) == policy.TRANSPORT and self._recording_armed()))
                 q.put({"status": "success", "result": handler(**params)})
             except Exception as e:
                 if type(e).__name__ in ("ToolError", "PolicyError"):   # by name: ext.py's ToolError survives a reload
@@ -521,48 +518,13 @@ class WavReadBridge(ControlSurface):
         return self._identity(create=True)
 
     def cmd_write_status(self):
-        st = self._auth.status(self._identity(create=False))
-        st["approval"] = self._settings.load()
-        cur = st["current_identity"]
-        st["writes_allowed"] = bool(cur.get("file_path")) and (st["approval"] == policy.APPROVAL_OFF or st["authorized"])
-        st["scratch_set"] = self._is_scratch()
-        return st
-
-    def cmd_authorize_set(self, file_path, set_id):
-        """Ask a person to approve edits to THIS open Set. Pass exactly the file_path and set_id get_set_identity
-        reports. A one-time code appears only in Live's status bar (never in this reply or a log). The user reads it
-        to the assistant, which calls confirm_authorization(code). Untitled Sets are refused: save first."""
-        reply, code = self._auth.request(self._identity(create=False), file_path, set_id, time.time())
-        # Live clears a control script's status-bar message after a few seconds (measured 2026-11-10), so re-show
-        # the code every ~1 s while this request is still pending, then clear the bar.
-        def refresh():
-            now = time.time()
-            if self._auth.pending_is(code, now):
-                left = int(self._auth._pending["expires"] - now)
-                self.show_message("WavRead Bridge approval code: %s   (%d s left, one attempt)" % (code, left))
-                self.schedule_message(10, refresh)
-            else:
-                self.show_message(" ")
-        refresh()
-        return reply
-
-    def cmd_confirm_authorization(self, code):
-        """Grant edits to the open Set with the code shown in Live's status bar. A wrong or expired code ends the
-        request."""
-        r = self._auth.confirm(self._identity(create=False), code, time.time())
-        self.show_message("WavRead Bridge: this Set is authorized for edits")
-        return r
-
-    def cmd_set_approval_mode(self, mode):
-        """'off': no approval codes from now on (the user's choice; needs the open Set authorized right now, so it
-        costs one code read). 'code': ask for a code again for every Set. Saved outside Live; survives restarts."""
-        r = policy.change_approval_mode(self._auth, self._settings, self._identity(create=False), mode)
-        self.show_message("WavRead Bridge: approval codes %s" % ("off" if mode == policy.APPROVAL_OFF else "on"))
-        return r
-
-    def cmd_revoke_authorization(self):
-        self._auth.revoke("revoked by request")
-        return {"authorized": False}
+        """Whether edits may run on the open Set: any saved Set (untitled Sets are refused); deletes only in a
+        disposable Set."""
+        cur = self._identity(create=False)
+        return {"writes_allowed": bool(cur.get("file_path")), "scratch_set": self._is_scratch(),
+                "current_identity": cur,
+                "rules": "edits run on any saved Set; untitled Sets are refused (save first); deletes run only in a "
+                         "disposable Set (a track named %s)" % policy.SCRATCH_MARKER}
 
     # ------------------------------------------------------------------ extensions (hot-reloadable)
     def _ext(self):

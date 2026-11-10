@@ -7,8 +7,9 @@ can drive Live through it. It binds to loopback only and never listens on other 
 authentication between local processes, so unload the Control Surface when you aren't using it, and don't forward the
 port.
 
-Write operations are refused unless the currently open Set has been authorized for writing (README, Safety). That
-protects your Sets from mistakes; it is not a defence against malicious software already running on your machine.
+There is no approval step (since 0.5.0): tools edit whichever saved Set is open. The guards that remain refuse
+unsaved Sets and allow deletions only in a disposable Set (README, Safety). They protect against mistakes, not against
+malicious software already running on your machine. Work on copies of Sets that matter.
 
 ## Reporting
 

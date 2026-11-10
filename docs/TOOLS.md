@@ -7,38 +7,27 @@ returns, sends, routing, buses and device chains.
 Tool names in a session: `mcp__ableton-tooling__<tool>`. Call `tooling_info` first: if it fails with "not listening",
 WavReadBridge isn't loaded in Live (see Setup).
 
-## Write permission (0.4.0): read this first
+## Write permission (0.5.0): read this first
 
-**0.4.0 changes:**
-- Authorizing needs out-of-band confirmation. `authorize_set` shows a one-time 6-character code ONLY in Live's
-  status bar: valid 2 minutes, one attempt, at most 3 requests a minute. The user reads it to the assistant, which
-  calls `confirm_authorization(code)`.
-- The code is tied to the exact Set and control-script session, replaced by a newer request, and dead after a Set
-  switch, Save As, reload or revoke.
-- **This is out-of-band confirmation for assistants without screen access, not a guaranteed human-only approval:**
-  an assistant with screen capture or computer use could read the code.
-- Untitled Sets can't be authorized or edited (save first).
-- An authorization with no edit for 30 minutes (PROPOSED, `policy.WRITE_IDLE_S`) is revoked.
-- Playback while record mode or Session record is on, and launching a clip that would record, count as edits.
-
-### Write permission (0.3.0 basis)
-
-- **Read-only tools work on any open Set.** Tools that change a Set are refused until that Set is authorized:
-  1. `get_set_identity` → `file_path`, `name`, `set_id` (a random id stored inside the Set itself);
-  2. `authorize_set(file_path, set_id)` with exactly those values;
-  3. `write_status` shows the state; `revoke_authorization` makes the Set read-only again.
-- **The authorization ends** when another Set is opened or switched to (Live re-creates the control script on every
-  Set load), on Save As to a different path, or when the script reloads. Every newly opened Set starts read-only.
+- **No approval codes.** 0.3.0 and 0.4.0 asked for a one-time code before editing a Set. the owner removed it on
+  2026-11-10 ("Will other people have to run the code? If so just remove it").
+- **Read-only tools work on any open Set.** Tools that change a Set work on any **saved** Set:
+  - untitled Sets are refused ("save the Set first"), so every edit lands in a file the user can find and back up;
+  - deletes (`delete_track`, `delete_device`, `delete_arrangement_clip`) run only in a disposable Set (a track named
+    `__TOOLING_SCRATCH__`);
+  - playback while record mode or Session record is on, and launching a clip that would record, count as edits;
+    `stop` and `stop_all_clips` always run.
+- `get_set_identity` → `file_path`, `name`, `set_id` (a random id stored inside the Set). `write_status` →
+  `writes_allowed` (true for any saved Set) and `scratch_set`.
 - **Every command is classified** in `remote_script/WavReadBridge/policy.py` as read, meta, transport or write. Any
   command not listed is a write.
-  - `fire_clip` on an empty slot of an armed track would record, so that case is a write.
-  - Deletes also need a disposable Set (a track named `__TOOLING_SCRATCH__`).
 - **Inputs are checked:** connections from anything but this computer are dropped, and requests over 1 MB are
   refused. Command names, parameter types and nesting are validated, and audio paths must be absolute, without `..`,
   an existing file, and an audio type.
-- Back up important Sets before authorizing them.
+- **Ask before editing a song that matters, and suggest a backup.** Nothing in the bridge asks for the user's OK any
+  more; the assistant has to.
 - Tests: `python3 -m unittest discover -s tests/offline` (no Live needed) and `tests/test_e2e_release.py
-  refuse|write|switched|reopened` (in a disposable Set).
+  connection|write|notscratch|reopened|untitled`.
 
 ## Conventions
 

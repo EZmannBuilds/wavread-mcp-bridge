@@ -3,7 +3,7 @@
 Generated from the server's registry by `tools/gen_tool_reference.py`; do not edit by hand.
 `arg?` is optional. Status per feature: `docs/CAPABILITY-MATRIX.md`. Units and conventions: `docs/TOOLS.md`.
 
-**83 tools.**
+**79 tools.**
 
 ## Connection and inspection
 
@@ -13,16 +13,12 @@ Generated from the server's registry by `tools/gen_tool_reference.py`; do not ed
 | `probe` | path?, values? | Capability detection: the attributes Live exposes on one LOM object. path: 'song', 'song.view', 'app', 'track:N' / 'return:A' / 'master' / a name, then steps 'clip:S', 'aclip:I', 'slot:S', 'device:D', 'chain:C', 'param:P', 'mixer', e.g. 'track:3/device:0/param:Frequency'. |
 | `reload_extensions` | none | Re-import WavReadBridge's ext.py (Phase 2 commands) after tools/install_remote_script.sh --ext. |
 
-## Write authorization
+## Set identity and safety
 
 | Tool | Arguments | What it does |
 |---|---|---|
 | `get_set_identity` | none | The open Live Set's identity: file_path, name, and a set_id stored inside the Set. |
-| `write_status` | none | writes_allowed (the one to check), approval mode ('code' or 'off'), whether the open Set is authorized, which Set was authorized, and why a previous authorization ended (another Set opened, Save As, reload, idle). |
-| `authorize_set` | file_path, set_id | Ask the user to approve edits to the Set open right now. |
-| `confirm_authorization` | code | Finish authorizing with the code the user read from Live's status bar. |
-| `set_approval_mode` | mode | 'off' = no approval codes from now on (the user's choice, saved on their computer, survives restarts). |
-| `revoke_authorization` | none | Make the open Set read-only again. |
+| `write_status` | none | writes_allowed (the one to check: true for any saved Set), whether it's a disposable Set (deletes run only there), and the open Set's identity. |
 
 ## Tracks and mixer
 

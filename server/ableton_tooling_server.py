@@ -819,53 +819,16 @@ def create_arrangement_midi_clip(track: Ref, at, length, notes: Optional[list] =
 @guarded
 def get_set_identity() -> str:
     """The open Live Set's identity: file_path, name, and a set_id stored inside the Set. Read-only tools work on any
-    Set; tools that change a Set need authorize_set first."""
+    Set; tools that change a Set need it saved (untitled Sets are refused)."""
     return out(call("get_set_identity"))
 
 
 @mcp.tool()
 @guarded
 def write_status() -> str:
-    """writes_allowed (the one to check), approval mode ('code' or 'off'), whether the open Set is authorized, which
-    Set was authorized, and why a previous authorization ended (another Set opened, Save As, reload, idle)."""
+    """writes_allowed (the one to check: true for any saved Set), whether it's a disposable Set (deletes run only
+    there), and the open Set's identity. Suggest a backup of important Sets before editing them."""
     return out(call("write_status"))
-
-
-@mcp.tool()
-@guarded
-def authorize_set(file_path: str, set_id: str) -> str:
-    """Ask the user to approve edits to the Set open right now. Pass exactly the file_path and set_id that
-    get_set_identity reports. This grants nothing by itself: a one-time 6-character code appears only in Live's
-    status bar (valid 2 minutes, one attempt). Ask the user to read it to you, then call confirm_authorization.
-    Untitled Sets are refused (save first). Opening or switching Sets, Save As to a new path, or reloading the
-    control script ends an authorization. Suggest a backup of important Sets before editing them."""
-    return out(call("authorize_set", file_path=file_path, set_id=set_id))
-
-
-@mcp.tool()
-@guarded
-def confirm_authorization(code: str) -> str:
-    """Finish authorizing with the code the user read from Live's status bar. A wrong or expired code ends the
-    request (call authorize_set again). After the first success, follow the reply's next_step: ask the user once
-    whether to turn approval codes off (set_approval_mode('off'))."""
-    return out(call("confirm_authorization", code=code))
-
-
-@mcp.tool()
-@guarded
-def set_approval_mode(mode: str) -> str:
-    """'off' = no approval codes from now on (the user's choice, saved on their computer, survives restarts).
-    Allowed only right after a successful confirm_authorization (it costs one code read). After a user's FIRST
-    approval, ask them once whether they want codes off; if they say no, don't ask again. 'code' turns codes back on
-    (always allowed). With codes off, untitled Sets and deletes outside a disposable Set are still refused."""
-    return out(call("set_approval_mode", mode=mode))
-
-
-@mcp.tool()
-@guarded
-def revoke_authorization() -> str:
-    """Make the open Set read-only again."""
-    return out(call("revoke_authorization"))
 
 
 def main():

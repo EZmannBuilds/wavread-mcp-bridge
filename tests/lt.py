@@ -74,13 +74,11 @@ class Log:
 
 
 def authorize():
-    """Tests run only in a disposable Set that a person has already authorized (0.4.0: approval needs the code from
-    Live's status bar: `python3 tests/approve.py request`, then `python3 tests/approve.py confirm CODE`)."""
+    """Tests run only in a saved disposable Set (a track named __TOOLING_SCRATCH__). No approval code (0.5.0)."""
     i = call("info")
     if not i.get("scratch_set"):
         raise SystemExit("refused: tests run only in a disposable Set (a track named __TOOLING_SCRATCH__)")
     st = call("write_status")
-    if not st["authorized"]:
-        raise SystemExit("this Set isn't authorized: run tests/approve.py request, read the code from Live's status "
-                         "bar, then tests/approve.py confirm CODE")
+    if not st["writes_allowed"]:
+        raise SystemExit("this Set is untitled: save it first")
     return st

@@ -12,7 +12,7 @@ OUT = os.path.join(ROOT, "docs", "TOOL-REFERENCE.md")
 # Group -> tools, in display order. Every registered tool must appear exactly once (tests/offline enforces it).
 GROUPS = {
     "Connection and inspection": ["tooling_info", "probe", "reload_extensions"],
-    "Write authorization": ["get_set_identity", "write_status", "authorize_set", "confirm_authorization", "set_approval_mode", "revoke_authorization"],
+    "Set identity and safety": ["get_set_identity", "write_status"],
     "Tracks and mixer": ["list_tracks", "create_track", "rename_track", "delete_track", "set_mixer", "set_arm"],
     "Return tracks and sends": ["list_return_tracks", "create_return_track", "rename_return_track",
                                 "get_return_track_devices", "load_effect_on_return_track",

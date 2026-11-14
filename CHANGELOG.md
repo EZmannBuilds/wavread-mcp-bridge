@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.6.0-alpha.1 (unreleased)
+
+- **Renamed to Faderhand, for Ableton Live 12.** The control script folder and class are now `Faderhand`
+  (status bar: "Faderhand: listening on port 9878"), `tooling_info` reports name `Faderhand` and version `0.6.0`,
+  the MCP server id is `faderhand`, and the docs, issue-template links and security advisory URL point to
+  https://github.com/EZmannBuilds/faderhand. Tool behavior, port, safety guards and the server file path
+  (`server/ableton_tooling_server.py`) are unchanged.
+- **Back-compat.** `tools/install_remote_script.sh` installs `Faderhand` and also updates an already existing
+  `WavReadBridge` folder, so an old Control Surface slot keeps listening on 9878 (enable only one of the two).
+  The server reads `FADERHAND_HOST` / `FADERHAND_PORT` first, then falls back to `WAVREAD_BRIDGE_HOST` /
+  `WAVREAD_BRIDGE_PORT`. Existing `claude mcp add wavread-bridge` configs keep working until removed. The Set
+  identity key (`wavread.set_id`) is unchanged so earlier Sets keep their identity.
+
 ## v0.5.0-alpha.1 (2026-11-10)
 
 - **Approval codes removed.** Tools now edit whichever saved Set is open, with no approval step. `authorize_set`,

@@ -5,7 +5,7 @@ stays for the owner to confirm by eye.
 usage: python3 tests/test_plugins.py --uris docs/plugin_uris.json [--vendor MeldaProduction] [--format VST3|AUv2|VST|any]
        [--via tooling|mcp]
 --via mcp loads through the working AbletonMCP (port 9877, load_browser_item by song.tracks index) and verifies
-through WavReadBridge; use it while WavReadBridge's own browser lookup is the 0.1.0 build (it missed every plugin
+through Faderhand; use it while Faderhand's own browser lookup is the 0.1.0 build (it missed every plugin
 URI, fixed in 0.1.1). Effects load on an audio bench track; anything that won't load there is retried on a MIDI
 bench track (instruments).
 Results: tests/results/plugins.json

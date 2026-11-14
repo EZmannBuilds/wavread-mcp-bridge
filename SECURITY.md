@@ -14,5 +14,5 @@ malicious software already running on your machine. Work on copies of Sets that 
 ## Reporting
 
 Please report vulnerabilities privately through GitHub's
-[security advisories](https://github.com/EZmannBuilds/wavread-mcp-bridge/security/advisories/new), not in a public
+[security advisories](https://github.com/EZmannBuilds/faderhand/security/advisories/new), not in a public
 issue. Include the Live version, OS, Remote Script version and the steps to reproduce.

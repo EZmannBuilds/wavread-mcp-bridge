@@ -9,9 +9,9 @@ Generated from the server's registry by `tools/gen_tool_reference.py`; do not ed
 
 | Tool | Arguments | What it does |
 |---|---|---|
-| `tooling_info` | none | Handshake: the WavReadBridge Remote Script's version, Live's version, track and return counts, whether the open set is a disposable scratch set (has a track named __TOOLING_SCRATCH__), and the command list. |
+| `tooling_info` | none | Handshake: the Faderhand Remote Script's version, Live's version, track and return counts, whether the open set is a disposable scratch set (has a track named __TOOLING_SCRATCH__), and the command list. |
 | `probe` | path?, values? | Capability detection: the attributes Live exposes on one LOM object. path: 'song', 'song.view', 'app', 'track:N' / 'return:A' / 'master' / a name, then steps 'clip:S', 'aclip:I', 'slot:S', 'device:D', 'chain:C', 'param:P', 'mixer', e.g. 'track:3/device:0/param:Frequency'. |
-| `reload_extensions` | none | Re-import WavReadBridge's ext.py (Phase 2 commands) after tools/install_remote_script.sh --ext. |
+| `reload_extensions` | none | Re-import Faderhand's ext.py (Phase 2 commands) after tools/install_remote_script.sh --ext. |
 
 ## Set identity and safety
 
@@ -71,7 +71,7 @@ Generated from the server's registry by `tools/gen_tool_reference.py`; do not ed
 | `load_effect` | track, effect, position? | Load an effect on any track (returns included) at a chain position. effect: native device name or browser URI. |
 | `get_device_parameters` | track, device, chain?, chain_device? | Parameters of a device; chain='0' with chain_device=N reaches device N inside rack chain 0. |
 | `set_device_parameter` | track, device, parameter, value, units?, chain?, chain_device? | Set one parameter by verified name or index. units as in set_return_device_parameter. |
-| `set_device_parameters` | track, device, values, units?, chain?, chain_device? | Set several parameters {name: value}; every name is checked before anything is written. chain ('c' or 'c/d/c') and chain_device reach a device inside a rack (WavReadBridge 0.1.1+). |
+| `set_device_parameters` | track, device, values, units?, chain?, chain_device? | Set several parameters {name: value}; every name is checked before anything is written. chain ('c' or 'c/d/c') and chain_device reach a device inside a rack (Faderhand 0.1.1+). |
 | `set_device_on` | track, device, on? | Bypass (on=False) or enable a device through its Device On parameter. |
 | `move_device` | track, device, to_position, to_track? | Reorder a device in its chain, or move it to another track (Song.move_device). |
 | `delete_device` | track, device | Delete a device. |

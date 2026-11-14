@@ -8,8 +8,10 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 
 
-def load_server(port):
-    os.environ["WAVREAD_BRIDGE_PORT"] = str(port)
+def load_server(port, new_var=False):
+    for k in ("FADERHAND_PORT", "WAVREAD_BRIDGE_PORT"):
+        os.environ.pop(k, None)
+    os.environ["FADERHAND_PORT" if new_var else "WAVREAD_BRIDGE_PORT"] = str(port)
     spec = importlib.util.spec_from_file_location("srv_%d" % port, os.path.join(ROOT, "server", "ableton_tooling_server.py"))
     srv = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(srv)
@@ -95,14 +97,35 @@ def test_connection_refused_hint():
     assert res["ok"] is False and "not listening" in res["error"]
 
 
+def test_env_vars_new_name_wins_old_name_falls_back():
+    for k in ("FADERHAND_HOST", "FADERHAND_PORT", "WAVREAD_BRIDGE_HOST", "WAVREAD_BRIDGE_PORT"):
+        os.environ.pop(k, None)
+    os.environ["WAVREAD_BRIDGE_PORT"], os.environ["WAVREAD_BRIDGE_HOST"] = "9911", "127.0.0.2"
+    spec = importlib.util.spec_from_file_location("srv_env", os.path.join(ROOT, "server", "ableton_tooling_server.py"))
+    old = importlib.util.module_from_spec(spec); spec.loader.exec_module(old)
+    assert (old.HOST, old.PORT) == ("127.0.0.2", 9911)
+    os.environ["FADERHAND_PORT"], os.environ["FADERHAND_HOST"] = "9922", "127.0.0.3"
+    new = importlib.util.module_from_spec(spec); spec.loader.exec_module(new)
+    assert (new.HOST, new.PORT) == ("127.0.0.3", 9922)
+    for k in ("FADERHAND_HOST", "FADERHAND_PORT", "WAVREAD_BRIDGE_HOST", "WAVREAD_BRIDGE_PORT"):
+        os.environ.pop(k, None)
+    d = importlib.util.module_from_spec(spec); spec.loader.exec_module(d)
+    assert (d.HOST, d.PORT) == ("127.0.0.1", 9878)
+
+
+def test_server_id_is_faderhand():
+    assert load_server(free_port()).mcp.name == "faderhand"
+
+
 def test_server_defaults_to_loopback():
     os.environ.pop("WAVREAD_BRIDGE_HOST", None)
+    os.environ.pop("FADERHAND_HOST", None)
     srv = load_server(free_port())
     assert srv.HOST == "127.0.0.1"
 
 
 def test_remote_script_binds_loopback_only():
-    src = open(os.path.join(ROOT, "remote_script", "WavReadBridge", "__init__.py")).read()
+    src = open(os.path.join(ROOT, "remote_script", "Faderhand", "__init__.py")).read()
     assert 'HOST = "127.0.0.1"' in src and "0.0.0.0" not in src
 
 

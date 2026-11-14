@@ -1,4 +1,4 @@
-# WavRead Bridge (WavReadBridge): a control script for Ableton Live 12.4 that serves the WavRead MCP Bridge server.
+# Faderhand: a control script for Ableton Live 12.4 that serves the Faderhand MCP server.
 #
 # It runs beside the working AbletonMCP Remote Script (port 9877, untouched) and adds what that one lacks: return
 # tracks, sends in verified dB, mixer, routing, audio buses, device chains, parameter snapshots and meters.
@@ -31,21 +31,21 @@ from . import policy
 
 PORT = 9878
 HOST = "127.0.0.1"
-VERSION = "0.5.0"
+VERSION = "0.6.0"
 SCRATCH_MARKER = "__TOOLING_SCRATCH__"   # destructive commands run only in a set that has a track with this name
 LETTERS = "ABCDEFGHIJKL"
 MAIN_THREAD_TIMEOUT = 20.0
 
 
 def create_instance(c_instance):
-    return WavReadBridge(c_instance)
+    return Faderhand(c_instance)
 
 
 class ToolError(Exception):
     pass
 
 
-class WavReadBridge(ControlSurface):
+class Faderhand(ControlSurface):
     def __init__(self, c_instance):
         ControlSurface.__init__(self, c_instance)
         self._song = self.song()
@@ -53,8 +53,8 @@ class WavReadBridge(ControlSurface):
         self.running = True
         self.server = None
         self._start_server()
-        self.log_message("WavReadBridge %s listening on %s:%d" % (VERSION, HOST, PORT))
-        self.show_message("WavRead Bridge: listening on port %d" % PORT)
+        self.log_message("Faderhand %s listening on %s:%d" % (VERSION, HOST, PORT))
+        self.show_message("Faderhand: listening on port %d" % PORT)
 
     def disconnect(self):
         self.running = False
@@ -117,7 +117,7 @@ class WavReadBridge(ControlSurface):
                     buf = buf.lstrip()[end:]
                     client.sendall(json.dumps(self._dispatch(cmd), default=str).encode("utf-8"))
         except Exception as e:
-            self.log_message("WavReadBridge client error: %s" % e)
+            self.log_message("Faderhand client error: %s" % e)
         finally:
             try:
                 client.close()
@@ -543,7 +543,7 @@ class WavReadBridge(ControlSurface):
                 "commands": sorted(n[4:] for n in dir(mod) if n.startswith("cmd_"))}
 
     def cmd_info(self):
-        return {"name": "WavReadBridge", "version": VERSION, "port": PORT, "live_version": "%d.%d.%d" % (
+        return {"name": "Faderhand", "version": VERSION, "port": PORT, "live_version": "%d.%d.%d" % (
             self.application().get_major_version(), self.application().get_minor_version(), self.application().get_bugfix_version()),
             "tracks": len(self._song.tracks), "returns": len(self._song.return_tracks),
             "scratch_set": any(t.name == SCRATCH_MARKER for t in self._song.tracks),

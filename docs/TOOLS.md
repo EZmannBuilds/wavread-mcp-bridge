@@ -1,11 +1,11 @@
-# ableton-tooling: tool reference
+# Faderhand: tool reference
 
-Server: `ableton-tooling` (registered with your MCP client; see the README). It talks to the WavReadBridge Remote Script on 127.0.0.1:9878.
+Server: `faderhand` (formerly `wavread-bridge`, and `ableton-tooling` in older versions of this page; registered with your MCP client; see the README). It talks to the Faderhand Remote Script on 127.0.0.1:9878.
 The `ableton` server (port 9877) keeps clips, notes, browser browsing and composing. Use this server for mixer,
 returns, sends, routing, buses and device chains.
 
-Tool names in a session: `mcp__ableton-tooling__<tool>`. Call `tooling_info` first: if it fails with "not listening",
-WavReadBridge isn't loaded in Live (see Setup).
+Tool names in a session: `mcp__faderhand__<tool>`. Call `tooling_info` first: if it fails with "not listening",
+Faderhand isn't loaded in Live (see Setup).
 
 ## Write permission (0.5.0): read this first
 
@@ -19,7 +19,7 @@ WavReadBridge isn't loaded in Live (see Setup).
     `stop` and `stop_all_clips` always run.
 - `get_set_identity` → `file_path`, `name`, `set_id` (a random id stored inside the Set). `write_status` →
   `writes_allowed` (true for any saved Set) and `scratch_set`.
-- **Every command is classified** in `remote_script/WavReadBridge/policy.py` as read, meta, transport or write. Any
+- **Every command is classified** in `remote_script/Faderhand/policy.py` as read, meta, transport or write. Any
   command not listed is a write.
 - **Inputs are checked:** connections from anything but this computer are dropped, and requests over 1 MB are
   refused. Command names, parameter types and nesting are validated, and audio paths must be absolute, without `..`,
@@ -108,7 +108,7 @@ In 0.1.1 the path can go deeper: `chain="1/0/2"` is chain 1, its device 0 (a nes
 ## Python client (for your own scripts)
 
 ```python
-import sys; sys.path.insert(0, "/path/to/wavread-mcp-bridge/tests")
+import sys; sys.path.insert(0, "/path/to/faderhand/tests")
 from lt import call, load          # call("<command>", **params) -> dict; raises LiveError on failure
 call("set_track_send", track="Keys", send="C", db=-12)
 ```
@@ -123,8 +123,8 @@ The command names are those of the Remote Script (`info` lists them). The MCP to
 ## Setup and rollback
 
 - Install: `tools/install_remote_script.sh` (done 2026-11-10). Then, in Live → Settings → Link, Tempo & MIDI, pick
-  **WavReadBridge** in an empty Control Surface slot (Input and Output: None). Live shows "WavReadBridge: listening on port 9878".
-- Rollback: clear that slot, then run `tools/install_remote_script.sh --uninstall` and `claude mcp remove ableton-tooling -s user`.
+  **Faderhand** in an empty Control Surface slot (Input and Output: None). Live shows "Faderhand: listening on port 9878".
+- Rollback: clear that slot, then run `tools/install_remote_script.sh --uninstall` and `claude mcp remove faderhand -s user`.
   AbletonMCP and the `ableton` server are never modified.
 - Regression and calibration tests: `tests/test_returns.py build|verify [--reopened]`, `tests/test_buses.py` and
   `tests/test_plugins.py`, each run in a scratch set.

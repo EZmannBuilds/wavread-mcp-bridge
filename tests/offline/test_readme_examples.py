@@ -27,3 +27,13 @@ def test_readme_examples_match_tool_schemas():
         keys = re.findall(r'(?<![\w"])(\w+)=', args)
         assert not [k for k in keys if k not in props], (name, keys)
         assert not set(tools[name].inputSchema.get("required", [])) - set(keys), name
+
+
+def test_readme_names_and_mcp_command():
+    s = open(os.path.join(ROOT, "README.md")).read()
+    assert s.startswith("# Faderhand, for Ableton Live 12\n")
+    assert ('claude mcp add faderhand -s user -- uv run -q --with "mcp[cli]>=1.9,<2" python '
+            '/absolute/path/to/faderhand/server/ableton_tooling_server.py') in s
+    assert "claude mcp remove wavread-bridge -s user" in s
+    assert "do not enable both" in s.lower()
+    assert os.path.exists(os.path.join(ROOT, "server", "ableton_tooling_server.py"))

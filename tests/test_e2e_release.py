@@ -1,4 +1,4 @@
-"""End-to-end release test for WavReadBridge 0.5.0 (no approval codes), against Live. Phases, run in this order:
+"""End-to-end release test for Faderhand 0.5.0 (no approval codes), against Live. Phases, run in this order:
   connection: (any saved Set) info answers with name, version and port; reconnects after a dropped half-request; the
              old approval commands are gone ("unknown command"); write_status reports writes_allowed.
   write    : (the disposable Set) track, return, native effect + parameters, third-party plugin (Apple AU, if
@@ -46,7 +46,7 @@ DELETES = [("delete_track", dict(track=0)), ("delete_device", dict(track=0, devi
 if phase == "connection":
     i = call("info")
     log("connection: info answers, name, version and loopback port", i["port"] == 9878 and i["version"] >= "0.5.0"
-        and i["name"] == "WavReadBridge", info={
+        and i["name"] == "Faderhand", info={
         k: i[k] for k in ("name", "version", "live_version", "port", "scratch_set")})
     import socket
     s = socket.create_connection(("127.0.0.1", 9878), timeout=5)

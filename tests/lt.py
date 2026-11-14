@@ -1,4 +1,4 @@
-"""Tiny client for the WavReadBridge Remote Script (127.0.0.1:9878), shared by the tests."""
+"""Tiny client for the Faderhand Remote Script (127.0.0.1:9878), shared by the tests."""
 import json, socket, time
 
 

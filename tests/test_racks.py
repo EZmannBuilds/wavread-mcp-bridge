@@ -1,4 +1,4 @@
-"""Nested rack parameters (WavReadBridge 0.1.1+): reach a Sampler two racks deep, set a parameter in display units,
+"""Nested rack parameters (Faderhand 0.1.1+): reach a Sampler two racks deep, set a parameter in display units,
 read it back. For example, a Sampler LFO destination.
 Needs the open scratch set with "Dark Corner Pad.adg" (Core Library, Sampler/Pad, query:Synths#Sampler:Pad:FileId_4944)
 on the track "Tool Plugin Bench MIDI". Measured layout on 2026-11-10: rack > chain 0 > device 1 (Instrument Rack) >
@@ -16,7 +16,7 @@ REOPENED = "--reopened" in sys.argv
 RES = os.path.join(os.path.dirname(__file__), "results")
 log = Log(os.path.join(RES, "racks-reopened.json" if REOPENED else "racks.json"))
 info = call("info")
-log("WavReadBridge 0.1.1+", info["version"] >= "0.1.1", version=info["version"])
+log("Faderhand 0.1.1+", info["version"] >= "0.1.1", version=info["version"])
 names = {t["name"]: t["ref"] for t in call("list_tracks", devices=False)}
 track = names["Tool Plugin Bench MIDI"]
 PATH = dict(track=track, device=0, chain="0/1/0", chain_device=0)

@@ -4,7 +4,7 @@ run: python3 -m unittest discover -s tests/offline -v
 import ast, os, sys, tempfile, unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PKG = os.path.join(HERE, "..", "..", "remote_script", "WavReadBridge")
+PKG = os.path.join(HERE, "..", "..", "remote_script", "Faderhand")
 sys.path.insert(0, PKG)
 import policy  # noqa: E402
 from policy import READ, WRITE, META, TRANSPORT, PolicyError  # noqa: E402

@@ -18,6 +18,8 @@ import re
 import uuid
 
 READ, WRITE, META, TRANSPORT = "read", "write", "meta", "transport"
+# Legacy key name, kept on purpose: it is stored inside Live Sets, and renaming it would orphan the identity of Sets
+# already edited with earlier versions.
 SET_ID_KEY = "wavread.set_id"
 SCRATCH_MARKER = "__TOOLING_SCRATCH__"
 MAX_REQUEST_BYTES = 1000000

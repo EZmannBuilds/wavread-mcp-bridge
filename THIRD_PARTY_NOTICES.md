@@ -15,7 +15,7 @@ few techniques were learned by reading these MIT-licensed projects (each one re-
 Runtime dependencies (installed by the user, not bundled): the [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)
 (MIT), and for the offline audio tools numpy, scipy (BSD-3-Clause), soundfile (BSD-3-Clause) and pyloudnorm (MIT).
 
-Ableton, Live and Push are trademarks of Ableton AG. WavRead MCP Bridge is an independent project and is not
+Ableton, Live and Push are trademarks of Ableton AG. Faderhand is an independent project and is not
 affiliated, associated, authorized, endorsed by, or in any way officially connected with Ableton AG.
 The Remote Script uses Live's `_Framework` and Live Object Model, which ship with Live and are not included here.
 Plugin names mentioned in docs and tests (Vital, MeldaProduction, Serum, Arturia and others) belong to their owners.

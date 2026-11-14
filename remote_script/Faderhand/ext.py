@@ -1,5 +1,5 @@
-# WavReadBridge extensions (Phase 2): commands that can be re-imported with `reload_extensions`, no Live restart.
-# Each command is a function cmd_<name>(cs, **params), where cs is the running WavReadBridge control surface:
+# Faderhand extensions (Phase 2): commands that can be re-imported with `reload_extensions`, no Live restart.
+# Each command is a function cmd_<name>(cs, **params), where cs is the running Faderhand control surface:
 # cs._song, cs._track(ref), cs._ref(track), cs._device(track, device, chain), cs._param(device, name),
 # cs._set_param(param, value, units), cs._pout(param), cs._require_scratch(), cs.application().
 # Runs on Live's main thread (the core's dispatcher schedules it). Raise ToolError for a clear, expected failure.

@@ -1,6 +1,6 @@
-"""ableton-tooling: an MCP server for Ableton Live 12 mixing and routing work, beside the `ableton` server (ahujasid/ableton-mcp).
+"""faderhand: an MCP server for Ableton Live 12 mixing and routing work, beside the `ableton` server (ahujasid/ableton-mcp).
 
-It talks to the WavReadBridge Remote Script (127.0.0.1:9878). The `ableton` server (uvx ableton-mcp, port 9877)
+It talks to the Faderhand Remote Script (127.0.0.1:9878). The `ableton` server (uvx ableton-mcp, port 9877)
 keeps composing, clips, notes and rendering; this one adds return tracks, sends in dB, mixer, routing, audio buses,
 device chains, parameter snapshots and meters.
 
@@ -20,9 +20,9 @@ from typing import Any, Optional, Union
 
 from mcp.server.fastmcp import FastMCP
 
-HOST = os.environ.get("WAVREAD_BRIDGE_HOST", "127.0.0.1")
-PORT = int(os.environ.get("WAVREAD_BRIDGE_PORT", "9878"))
-mcp = FastMCP("wavread-mcp-bridge")
+HOST = os.environ.get("FADERHAND_HOST") or os.environ.get("WAVREAD_BRIDGE_HOST") or "127.0.0.1"  # old name kept as a fallback
+PORT = int(os.environ.get("FADERHAND_PORT") or os.environ.get("WAVREAD_BRIDGE_PORT") or "9878")
+mcp = FastMCP("faderhand")
 Ref = Union[int, str]
 
 
@@ -40,7 +40,7 @@ def call(command: str, timeout: float = 30.0, **params) -> Any:
         while True:
             chunk = s.recv(1 << 20)
             if not chunk:
-                raise LiveError("WavReadBridge closed the connection")
+                raise LiveError("Faderhand closed the connection")
             buf += chunk
             try:
                 reply, _ = dec.raw_decode(buf.decode())
@@ -77,7 +77,7 @@ def guarded(fn):
         except (LiveError, OSError) as e:
             hint = ""
             if isinstance(e, ConnectionRefusedError):
-                hint = (" (WavReadBridge is not listening on %s:%d: pick it in Live > Settings > Link, Tempo & MIDI > "
+                hint = (" (Faderhand is not listening on %s:%d: pick it in Live > Settings > Link, Tempo & MIDI > "
                         "Control Surface, or restart Live)" % (HOST, PORT))
             return out({"ok": False, "error": str(e) + hint})
     return wrap
@@ -87,7 +87,7 @@ def guarded(fn):
 @mcp.tool()
 @guarded
 def tooling_info() -> str:
-    """Handshake: the WavReadBridge Remote Script's version, Live's version, track and return counts, whether the
+    """Handshake: the Faderhand Remote Script's version, Live's version, track and return counts, whether the
     open set is a disposable scratch set (has a track named __TOOLING_SCRATCH__), and the command list."""
     return out(call("info"))
 
@@ -282,7 +282,7 @@ def set_device_parameter(track: Ref, device: Ref, parameter: Ref, value: Union[f
 def set_device_parameters(track: Ref, device: Ref, values: dict, units: str = "auto",
                           chain: Optional[str] = None, chain_device: Optional[int] = None) -> str:
     """Set several parameters {name: value}; every name is checked before anything is written.
-    chain ('c' or 'c/d/c') and chain_device reach a device inside a rack (WavReadBridge 0.1.1+)."""
+    chain ('c' or 'c/d/c') and chain_device reach a device inside a rack (Faderhand 0.1.1+)."""
     extra = {} if chain in (None, "") else {"chain": chain, "chain_device": chain_device}
     return out(call("set_device_parameters", track=track, device=device, values=values, units=units, **extra))
 
@@ -498,7 +498,7 @@ def fire_clip(track: Ref, slot: int = 0) -> str:
 @mcp.tool()
 @guarded
 def reload_extensions() -> str:
-    """Re-import WavReadBridge's ext.py (Phase 2 commands) after tools/install_remote_script.sh --ext. No Live restart."""
+    """Re-import Faderhand's ext.py (Phase 2 commands) after tools/install_remote_script.sh --ext. No Live restart."""
     return out(call("reload_extensions"))
 
 

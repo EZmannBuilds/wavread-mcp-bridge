@@ -1,4 +1,4 @@
-# Ableton capability matrix, Phase 2 (Live 12.4.16, WavReadBridge 0.2.0; 2026-11-10)
+# Ableton capability matrix, Phase 2 (Live 12.4.16, Faderhand 0.2.0; 2026-11-10)
 
 Status:
 - **Working**: performed in Live, read back, persisted through save and reopen where that applies, and proven
@@ -118,7 +118,7 @@ transport that would record counts as an edit; stop always runs; loopback only. 
 | Save As to a new path ends it | Working | Live check, 2026-11-10: authorized `Release E2E`, Save As to `Release E2E SaveAs` → status not authorized; the next write was refused and the authorization revoked with the reason "the open Set changed". The control script isn't re-created by Save As and the copy keeps its stored `set_id`, so the path check is what catches it |
 | classifier, fail-closed logic, validation | Working | `tests/offline/test_policy.py`: 18 tests; every command classified, unknown = write |
 
-## Write protection 0.4.0 (WavReadBridge), tested in Live 2026-11-10
+## Write protection 0.4.0 (Faderhand), tested in Live 2026-11-10
 
 All PASS on Live 12.4.16, macOS:
 - **refuse 17/17:**

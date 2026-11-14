@@ -1,4 +1,4 @@
-# WavRead MCP Bridge
+# Faderhand, for Ableton Live 12
 
 An independent, open-source MCP server and control script for Ableton Live, for AI-assisted music production.
 
@@ -24,7 +24,7 @@ then call its 79 tools.
 AI client ──stdio──▶ MCP server (server/ableton_tooling_server.py)
                           │  JSON over TCP, 127.0.0.1:9878 only
                           ▼
-                     Live control script (remote_script/WavReadBridge, runs inside Live)
+                     Live control script (remote_script/Faderhand, runs inside Live)
                           │  Live Object Model, on Live's main thread
                           ▼
                      your open Live Set
@@ -50,26 +50,44 @@ No third-party plugins are needed. The tests use only Live's own devices and App
 ## Install
 
 1. **Get the code:** clone the repo, or download the source archive from the latest
-   [release](https://github.com/EZmannBuilds/wavread-mcp-bridge/releases) and unzip it.
+   [release](https://github.com/EZmannBuilds/faderhand/releases) and unzip it.
 2. **Install the control script** (macOS):
    ```bash
    bash tools/install_remote_script.sh
    ```
-   It copies `remote_script/WavReadBridge` to `~/Music/Ableton/User Library/Remote Scripts/WavReadBridge`
-   (backing up any earlier copy under `backups/`).
-3. **Enable it in Live:** restart Live, open Settings → Link, Tempo & MIDI, and pick **WavReadBridge** in an empty
+   It copies `remote_script/Faderhand` to `~/Music/Ableton/User Library/Remote Scripts/Faderhand`
+   (backing up any earlier copy under `backups/`). If an older `WavReadBridge` folder is already there, the script
+   also updates it (see Migrating from WavReadBridge below). It only copies files.
+3. **Enable it in Live:** restart Live, open Settings → Link, Tempo & MIDI, and pick **Faderhand** in an empty
    Control Surface slot, with Input and Output set to None. Live's status bar shows
-   that the bridge is listening on port 9878.
+   "Faderhand: listening on port 9878".
 4. **Add the MCP server to your client.** Claude Code:
    ```bash
-   claude mcp add wavread-bridge -s user -- uv run -q --with "mcp[cli]>=1.9,<2" python /absolute/path/to/wavread-mcp-bridge/server/ableton_tooling_server.py
+   claude mcp add faderhand -s user -- uv run -q --with "mcp[cli]>=1.9,<2" python /absolute/path/to/faderhand/server/ableton_tooling_server.py
    ```
    Other clients: register a stdio server with that same command.
 5. **Check the bridge:** ask the assistant to call `tooling_info`. It returns the control script's version, Live's
    version and the track count. "not listening" means step 3 didn't take: restart Live and pick the script again.
 
 **Uninstall:** clear the Control Surface slot, run `bash tools/install_remote_script.sh --uninstall`, and remove the
-server from your client (`claude mcp remove wavread-bridge -s user`).
+server from your client (`claude mcp remove faderhand -s user`).
+
+### Migrating from WavReadBridge
+
+Earlier versions installed the control script as `WavReadBridge` and registered the MCP server as `wavread-bridge`
+(or `ableton-tooling` in the oldest docs).
+
+- **Control Surface:** `install_remote_script.sh` installs `Faderhand` and, only if a `WavReadBridge` folder already
+  exists, updates that folder with the same code. Either pick Faderhand in an empty slot, or keep using your existing
+  WavReadBridge slot. **Do not enable both:** they use the same port (9878) and the second one cannot bind.
+  After you switch to Faderhand, clear the old slot and remove `~/Music/Ableton/User Library/Remote Scripts/WavReadBridge`
+  yourself (the uninstall option only removes Faderhand).
+- **MCP client:** run `claude mcp add faderhand ...` as above, then `claude mcp remove wavread-bridge -s user`. An
+  existing `wavread-bridge` entry keeps working until you remove it, as long as its command still points at
+  `server/ableton_tooling_server.py` (the file name is unchanged). If you copied the repo to a new folder, update the path.
+- **Environment variables:** `FADERHAND_HOST` (default `127.0.0.1`) and `FADERHAND_PORT` (default `9878`) are the
+  documented names. `WAVREAD_BRIDGE_HOST` and `WAVREAD_BRIDGE_PORT` still work if the new ones are unset.
+- Sets you already edited keep their identity: the internal key stored in the Set file is unchanged.
 
 ## Safety: what it will and won't do
 
@@ -81,7 +99,7 @@ server from your client (`claude mcp remove wavread-bridge -s user`).
     `__TOOLING_SCRATCH__`.
   - **Recording counts as an edit:** starting playback while recording, or launching a clip that would record. Stop
     is always allowed.
-  - Every command is classified as read, meta, transport or write in `remote_script/WavReadBridge/policy.py`, and
+  - Every command is classified as read, meta, transport or write in `remote_script/Faderhand/policy.py`, and
     anything not listed counts as a write.
 - **Undo:** most edits can be undone with Live's own Undo, but keep backups anyway; recorded audio and saved files are
   harder to recover.
@@ -202,5 +220,5 @@ Planned work: [ROADMAP.md](ROADMAP.md).
 ## License
 
 MIT © 2026 Erik Mann. See [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
-Ableton, Live and Push are trademarks of Ableton AG. WavRead MCP Bridge is an independent project and is not
+Ableton, Live and Push are trademarks of Ableton AG. Faderhand is an independent project and is not
 affiliated, associated, authorized, endorsed by, or in any way officially connected with Ableton AG.
